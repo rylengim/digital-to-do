@@ -44,7 +44,7 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .list-nav button:hover { background: var(--line); }
 .list-nav button[aria-pressed="true"] { background: var(--selected); color: var(--accent); font-weight: 600; }
 .list-nav-title { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-.list-nav-count { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; padding-top: 2px; }
+.list-nav-count { color: inherit; font-size: 12px; font-variant-numeric: tabular-nums; padding-top: 2px; }
 .mobile-header { display: none; }
 .workspace { display: flex; flex-direction: column; width: 100%; max-width: 880px; min-width: 0; margin: 0 auto; padding: 48px 48px 24px; }
 .workspace-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
@@ -106,7 +106,7 @@ dialog p { line-height: 1.6; overflow-wrap: anywhere; font-size: 14px; }
 #list-picker-dialog .dialog-heading { margin: 0; }
 #list-picker-dialog .dialog-heading, #list-picker-dialog > button { flex-shrink: 0; }
 #list-picker-dialog .list-nav { min-height: 0; }
-#delete-list-name { max-height: min(160px, 25dvh); background: var(--sidebar); border-radius: var(--radius-field); padding: 12px; margin: 16px 0; }
+#delete-list-name { max-height: min(160px, 25dvh); background: var(--sidebar); border-radius: var(--radius-field); padding: 12px; margin: 16px 0; font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (max-width: 700px) {
   .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }

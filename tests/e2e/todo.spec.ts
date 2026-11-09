@@ -1,16 +1,19 @@
 import { expect, test, type Page } from '@playwright/test';
 import { addTask, addTaskButton, deleteTask, listMenuTrigger, openTaskForm, taskMenuTrigger, taskRows } from './helpers';
 
-async function loadLongMobileList(page: Page) {
+async function loadLongMobileList(page: Page, { failWrites = false } = {}) {
   await page.setViewportSize({ width: 320, height: 568 });
-  await page.addInitScript(() => {
+  await page.addInitScript(failWrites => {
     const tasks = Array.from({ length: 16 }, (_, index) => ({
       id: `task-${index + 1}`, title: `Задача ${index + 1}`, completed: false,
     }));
     localStorage.setItem('digital-todo.state.v2', JSON.stringify({
       version: 2, activeListId: 'inbox', lists: [{ id: 'inbox', title: 'Мои задачи', tasks }],
     }));
-  });
+    if (failWrites) {
+      Storage.prototype.setItem = () => { throw new DOMException('Test quota', 'QuotaExceededError'); };
+    }
+  }, failWrites);
   await page.goto('/');
   await expect(taskRows(page)).toHaveCount(16);
 }
@@ -224,6 +227,25 @@ test('keeps a save failure in view when changing a task far down a mobile list',
   await expect(warning).toContainText('Не удалось сохранить');
   await expect(warning).toBeInViewport({ ratio: 1 });
   expect(await page.evaluate(() => localStorage.getItem('digital-todo.state.v2'))).toBe(saved);
+});
+
+test('keeps keyboard focus visible below the sticky save warning', async ({ page }) => {
+  await loadLongMobileList(page, { failWrites: true });
+  const checkbox = page.getByRole('checkbox', { name: 'Задача 16', exact: true });
+  await checkbox.check();
+  await expect(checkbox).toBeFocused();
+  const warning = page.locator('#storage-warning');
+  await expect(warning).toContainText('Не удалось сохранить');
+
+  // Cross three rows (three controls each) and land on the preceding row's menu.
+  for (let step = 0; step < 10; step++) await page.keyboard.press('Shift+Tab');
+  const trigger = taskMenuTrigger(taskRows(page).nth(11));
+  await expect(trigger).toBeFocused();
+  await expect(warning).toBeInViewport({ ratio: 1 });
+  await expect(trigger).toBeInViewport({ ratio: 1 });
+  const warningBox = (await warning.boundingBox())!;
+  const triggerBox = (await trigger.boundingBox())!;
+  expect(triggerBox.y).toBeGreaterThanOrEqual(warningBox.y + warningBox.height);
 });
 
 test('warns about corrupt data and replaces it only after an explicit addition', async ({ browser }) => {

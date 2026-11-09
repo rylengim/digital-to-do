@@ -63,6 +63,17 @@ export function setupListControls(state: AppState, onChange: (message: string) =
   openPicker.addEventListener('click', () => picker.showModal());
   element('#close-list-picker').addEventListener('click', () => picker.close());
 
+  // A layout change can hide the opener while its modal is still open.
+  for (const dialog of [picker, nameDialog]) {
+    dialog.addEventListener('close', () => {
+      const focused = document.activeElement;
+      if (!(focused instanceof HTMLElement) || focused === document.body
+        || focused.getClientRects().length === 0 || focused.closest('dialog:not([open])')) {
+        closeMenu(menu);
+      }
+    });
+  }
+
   function openNameDialog(rename: boolean): void {
     if (picker.open) picker.close();
     if (rename) closeMenu(menu);
@@ -116,7 +127,7 @@ export function setupListControls(state: AppState, onChange: (message: string) =
     const current = state.lists.find(list => list.id === state.activeListId)!;
     deletingId = current.id;
     element('#delete-list-description').textContent = `Будут удалены список и все его задачи. Это действие нельзя отменить. Задач в списке: ${current.tasks.length}.`;
-    element('#delete-list-name').textContent = current.title;
+    element('#delete-list-name-text').textContent = current.title;
     deleteDialog.showModal();
     element('#delete-list-cancel').focus();
   });

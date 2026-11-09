@@ -141,6 +141,7 @@ test('keeps delete consequences and actions visible before a long, literal list 
   const name = dialog.locator('#delete-list-name');
   const confirm = dialog.getByRole('button', { name: 'Удалить', exact: true });
   await expect(dialog).toContainText(title);
+  await expect(dialog).toHaveAccessibleDescription(`Будут удалены список и все его задачи. Это действие нельзя отменить. Задач в списке: 1. ${title}`);
   await expect(dialog.locator('img')).toHaveCount(0);
   await expect(consequences).toContainText('Задач в списке: 1');
   await expect(consequences).toContainText(/все (его )?задачи/i);
@@ -288,6 +289,30 @@ test('uses a modal list picker on mobile and returns focus when it closes', asyn
   await expect(listButton(page, 'Мои задачи')).toHaveAttribute('aria-pressed', 'true');
   await listButton(page, 'Работа').click();
   await expect(page.getByRole('checkbox', { name: 'Рабочая задача' })).toBeVisible();
+});
+
+test('restores keyboard focus when a list dialog closes after a layout change', async ({ page }) => {
+  const cases = [
+    { from: 320, to: 768, dialogName: 'Мои списки' },
+    { from: 320, to: 768, dialogName: 'Новый список' },
+    { from: 768, to: 320, dialogName: 'Новый список' },
+  ];
+  for (const { from, to, dialogName } of cases) {
+    await test.step(`${dialogName}, ${from} → ${to} px`, async () => {
+      await page.setViewportSize({ width: from, height: 568 });
+      await page.goto('/');
+      if (dialogName === 'Мои списки') await listPickerButton(page).click();
+      else await openCreateList(page);
+      const dialog = page.getByRole('dialog', { name: dialogName, exact: true });
+      await expect(dialog).toBeVisible();
+      await page.setViewportSize({ width: to, height: 568 });
+      await page.keyboard.press('Escape');
+      await expect(dialog).toBeHidden();
+      await expect(listMenuTrigger(page)).toBeFocused();
+      await page.keyboard.press('Enter');
+      await expect(listMenu(page).getByRole('button', { name: 'Переименовать', exact: true })).toBeVisible();
+    });
+  }
 });
 
 test('restores the add form and its draft per list until reload', async ({ page }) => {

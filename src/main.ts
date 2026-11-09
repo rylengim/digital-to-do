@@ -13,6 +13,7 @@ let list = element<HTMLUListElement>('#task-list');
 const emptyState = element('#empty-state');
 const count = element('#task-count');
 const warning = element('#storage-warning');
+const workspace = element('.workspace');
 const storageStatus = element('#storage-status');
 const announcement = element('#announcement');
 const loaded = loadState();
@@ -22,10 +23,24 @@ let activeList = state.lists.find(item => item.id === state.activeListId)!;
 const taskViews = new Map<string, HTMLUListElement>([[activeList.id, list]]);
 const addDrafts = new Map<string, { value: string; open: boolean }>();
 
+function revealFocusBelowWarning(): void {
+  // Native focus scrolling doesn't account for the sticky warning.
+  const focused = document.activeElement;
+  if (warning.hidden || !(focused instanceof HTMLElement) || !workspace.contains(focused)) return;
+  const target = focused.getBoundingClientRect();
+  const banner = warning.getBoundingClientRect();
+  if (target.width > 0 && target.height > 0 && target.top < banner.bottom && target.bottom > banner.top
+    && target.left < banner.right && target.right > banner.left) {
+    window.scrollBy({ top: target.top - banner.bottom - 12, behavior: 'instant' });
+  }
+}
+workspace.addEventListener('focusin', revealFocusBelowWarning);
+
 function showStorageWarning(message: string): void {
   warning.textContent = message;
   warning.hidden = message.length === 0;
   storageStatus.textContent = message ? 'Сохранение требует внимания' : 'Задачи хранятся в этом браузере';
+  revealFocusBelowWarning();
 }
 
 function updateSummary(): void {

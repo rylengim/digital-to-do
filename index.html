@@ -77,11 +77,11 @@
         </div>
       </form>
     </dialog>
-    <dialog id="delete-list-dialog" aria-labelledby="delete-list-heading" aria-describedby="delete-list-description delete-list-name">
+    <dialog id="delete-list-dialog" aria-labelledby="delete-list-heading" aria-describedby="delete-list-description delete-list-name-text">
       <form id="delete-list-form">
         <h2 id="delete-list-heading">Удалить список?</h2>
         <p id="delete-list-description"></p>
-        <p id="delete-list-name" class="dialog-scroll" tabindex="0" aria-label="Название удаляемого списка"></p>
+        <div id="delete-list-name" class="dialog-scroll" role="region" tabindex="0" aria-label="Название удаляемого списка"><span id="delete-list-name-text"></span></div>
         <div class="edit-controls">
           <button id="delete-list-cancel" class="edit-cancel" type="button">Отмена</button>
           <button class="edit-save" type="submit">Удалить</button>
