@@ -1,65 +1,58 @@
-import { expect, test, type Page } from '@playwright/test';
-
-async function createList(page: Page, title: string) {
-  await page.getByRole('button', { name: 'Новый список', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Новый список', exact: true });
-  await dialog.getByRole('textbox', { name: 'Название списка' }).fill(title);
-  await dialog.getByRole('button', { name: 'Создать', exact: true }).click();
-}
-
-async function addTask(page: Page, title: string) {
-  const input = page.getByRole('textbox', { name: 'Что нужно сделать?' });
-  await input.fill(title);
-  await input.press('Enter');
-}
+import { expect, test } from '@playwright/test';
+import {
+  activeListTitle, addTask, addTaskButton, createList, listButton, listMenu, listMenuTrigger, listNav,
+  listPicker, listPickerButton, openCreateList, openListAction, openTaskForm, taskInput,
+} from './helpers';
 
 test('manages independent lists and restores the selected list', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('button', { name: 'Удалить список', exact: true })).toBeDisabled();
+  await listMenuTrigger(page).click();
+  await expect(listMenu(page).getByRole('button', { name: 'Удалить список', exact: true })).toBeDisabled();
   await addTask(page, 'Личная задача');
   await createList(page, '  Работа  ');
   await expect(page.getByRole('checkbox')).toHaveCount(0);
   await addTask(page, 'Рабочая задача');
   await page.getByRole('checkbox').check();
-  await page.getByRole('button', { name: 'Переименовать', exact: true }).click();
+  await openListAction(page, 'Переименовать');
   const rename = page.getByRole('dialog', { name: 'Переименовать список' });
   await rename.getByRole('textbox').fill('Проект');
   await rename.getByRole('button', { name: 'Сохранить', exact: true }).click();
   await page.reload();
-  const picker = page.getByRole('combobox', { name: 'Текущий список' });
-  await expect(picker.locator('option:checked')).toHaveText('Проект');
+  await expect(activeListTitle(page)).toHaveText('Проект');
+  await expect(listButton(page, 'Проект')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByRole('checkbox', { name: 'Рабочая задача' })).toBeChecked();
-  await picker.selectOption({ label: 'Мои задачи' });
+  await listButton(page, 'Мои задачи').click();
   await expect(page.getByRole('checkbox', { name: 'Личная задача' })).not.toBeChecked();
   await expect(page.getByRole('checkbox')).toHaveCount(1);
   await page.reload();
-  await expect(picker.locator('option:checked')).toHaveText('Мои задачи');
+  await expect(activeListTitle(page)).toHaveText('Мои задачи');
+  await expect(listButton(page, 'Мои задачи')).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('confirms deletion, supports cancellation and protects the last list', async ({ page }) => {
   await page.goto('/');
   await createList(page, 'Учёба');
   await addTask(page, 'Не потерять');
-  const remove = page.getByRole('button', { name: 'Удалить список', exact: true });
-  await remove.click();
+  const remove = listMenu(page).getByRole('button', { name: 'Удалить список', exact: true });
+  await openListAction(page, 'Удалить список');
   const dialog = page.getByRole('dialog', { name: 'Удалить список?' });
   await expect(dialog).toContainText('Учёба');
   await expect(dialog).toContainText('Задач в списке: 1');
   await dialog.getByRole('button', { name: 'Отмена', exact: true }).click();
-  await expect(remove).toBeFocused();
+  await expect(listMenuTrigger(page)).toBeFocused();
   await expect(page.getByRole('checkbox', { name: 'Не потерять' })).toBeVisible();
-  await remove.click();
+  await openListAction(page, 'Удалить список');
   await page.keyboard.press('Escape');
-  await expect(remove).toBeFocused();
-  await remove.click();
+  await expect(listMenuTrigger(page)).toBeFocused();
+  await openListAction(page, 'Удалить список');
   await dialog.getByRole('button', { name: 'Удалить', exact: true }).click();
-  const picker = page.getByRole('combobox', { name: 'Текущий список' });
-  await expect(picker).toBeFocused();
-  await expect(picker.locator('option')).toHaveCount(1);
+  await expect(listMenuTrigger(page)).toBeFocused();
+  await expect(listNav(page).getByRole('button')).toHaveCount(1);
+  await listMenuTrigger(page).click();
   await expect(remove).toBeDisabled();
   await page.reload();
   await expect(page.getByRole('checkbox')).toHaveCount(0);
-  await expect(picker.locator('option')).toHaveCount(1);
+  await expect(listNav(page).getByRole('button')).toHaveCount(1);
 });
 
 test('keeps two drafts in memory across list switches without saving either', async ({ page }) => {
@@ -71,17 +64,16 @@ test('keeps two drafts in memory across list switches without saving either', as
   await addTask(page, 'Задача B');
   await page.getByRole('button', { name: 'Изменить задачу: Задача B' }).click();
   await page.getByRole('textbox', { name: 'Название задачи' }).fill('Черновик B');
-  const picker = page.getByRole('combobox', { name: 'Текущий список' });
-  await picker.selectOption({ label: 'Мои задачи' });
+  await listButton(page, 'Мои задачи').click();
   await expect(page.getByRole('textbox', { name: 'Название задачи' })).toHaveValue('Черновик A');
   const raw = await page.evaluate(() => localStorage.getItem('digital-todo.state.v2'));
   expect(raw).not.toContain('Черновик');
   await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
-  await picker.selectOption({ label: 'B' });
+  await listButton(page, 'B').click();
   await expect(page.getByRole('textbox', { name: 'Название задачи' })).toHaveValue('Черновик B');
   await page.reload();
   await expect(page.getByRole('checkbox', { name: 'Задача B' })).toBeVisible();
-  await picker.selectOption({ label: 'Мои задачи' });
+  await listButton(page, 'Мои задачи').click();
   await expect(page.getByRole('checkbox', { name: 'Черновик A' })).toBeVisible();
 });
 
@@ -100,14 +92,14 @@ test('migrates old tasks without overwriting the legacy key or repeating migrati
   expect(saved.lists[0].tasks).toEqual(oldTasks);
   expect(await page.evaluate(() => localStorage.getItem('digital-todo.tasks.v1'))).toBe(raw);
   await page.reload();
-  await expect(page.getByRole('combobox').locator('option')).toHaveCount(2);
+  await expect(listNav(page).getByRole('button')).toHaveCount(2);
   await expect(page.getByRole('checkbox')).toHaveCount(0);
   await context.close();
 });
 
 test('validates names, cancels rename and distinguishes equal list titles', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Новый список', exact: true }).click();
+  await openCreateList(page);
   const dialog = page.getByRole('dialog');
   const input = dialog.getByRole('textbox');
   await input.fill('   ');
@@ -116,31 +108,55 @@ test('validates names, cancels rename and distinguishes equal list titles', asyn
   await expect(input).toBeFocused();
   await input.fill('Мои задачи');
   await input.press('Enter');
-  const picker = page.getByRole('combobox');
-  const secondId = await picker.inputValue();
-  expect(secondId).not.toBe('inbox');
+  const sameNames = listButton(page, 'Мои задачи');
+  await expect(sameNames).toHaveCount(2);
+  const second = sameNames.and(listNav(page).locator('[aria-pressed="true"]'));
+  await expect(second).toHaveAttribute('data-list-id', /^(?!inbox$).+$/);
+  const secondId = (await second.getAttribute('data-list-id'))!;
+  const byId = (id: string) => listNav(page).locator(`button[data-list-id="${id}"]`);
   await addTask(page, 'Вторая');
-  await picker.selectOption('inbox');
+  await byId('inbox').click();
   await expect(page.getByRole('checkbox')).toHaveCount(0);
-  await picker.selectOption(secondId);
+  await byId(secondId).click();
   await expect(page.getByRole('checkbox', { name: 'Вторая' })).toBeVisible();
-  await page.getByRole('button', { name: 'Переименовать', exact: true }).click();
+  await openListAction(page, 'Переименовать');
   await input.fill('Несохранённое');
   await page.keyboard.press('Escape');
-  await expect(picker.locator('option:checked')).toHaveText('Мои задачи');
+  await expect(activeListTitle(page)).toHaveText('Мои задачи');
+  await expect(byId(secondId)).toHaveAccessibleName('Мои задачи');
+  await expect(byId(secondId)).toHaveAttribute('aria-pressed', 'true');
 });
 
-test('keeps controls usable at 320px and renders list names literally', async ({ page }) => {
-  await page.setViewportSize({ width: 320, height: 900 });
+test('keeps delete consequences and actions visible before a long, literal list name', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
   await page.goto('/');
   const title = '<img src=x onerror=alert(1)>' + 'Название'.repeat(30);
   await createList(page, title);
-  await expect(page.getByRole('combobox').locator('option:checked')).toHaveText(title);
-  await page.getByRole('button', { name: 'Удалить список', exact: true }).click();
+  await expect(activeListTitle(page)).toHaveText(title);
+  await expect(listMenuTrigger(page)).toBeFocused();
+  await addTask(page, 'Удалится вместе со списком');
+  await openListAction(page, 'Удалить список');
   const dialog = page.getByRole('dialog', { name: 'Удалить список?' });
+  const consequences = dialog.locator('#delete-list-description');
+  const name = dialog.locator('#delete-list-name');
+  const confirm = dialog.getByRole('button', { name: 'Удалить', exact: true });
   await expect(dialog).toContainText(title);
   await expect(dialog.locator('img')).toHaveCount(0);
-  await expect(dialog.getByRole('button', { name: 'Удалить', exact: true })).toBeInViewport();
+  await expect(consequences).toContainText('Задач в списке: 1');
+  await expect(consequences).toContainText(/все (его )?задачи/i);
+  await expect(consequences).toBeInViewport({ ratio: 1 });
+  await expect(confirm).toBeInViewport({ ratio: 1 });
+  await expect(name).toContainText(title);
+  const nameBox = (await name.boundingBox())!;
+  const warningBox = (await consequences.boundingBox())!;
+  expect(nameBox.y).toBeGreaterThanOrEqual(warningBox.y + warningBox.height);
+  const scrollTop = await name.evaluate(element => {
+    element.scrollTop = element.scrollHeight;
+    return element.scrollTop;
+  });
+  expect(scrollTop).toBeGreaterThan(0);
+  await expect(consequences).toBeInViewport({ ratio: 1 });
+  await expect(confirm).toBeInViewport({ ratio: 1 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
 });
 
@@ -165,13 +181,14 @@ test('preserves legacy data if migration cannot be saved, then recovers on the n
   expect(await page.evaluate(() => localStorage.getItem('digital-todo.state.v2'))).toBeNull();
   expect(await page.evaluate(() => localStorage.getItem('digital-todo.tasks.v1'))).toBe(raw);
   await page.reload();
-  await expect(page.getByRole('combobox').locator('option')).toHaveCount(1);
+  await expect(listNav(page).getByRole('button')).toHaveCount(1);
   await expect(page.getByRole('checkbox', { name: 'Не потерять' })).toBeChecked();
   await page.evaluate(() => (window as unknown as { allowTestWrites: () => void }).allowTestWrites());
   await createList(page, 'Сохранённый список');
   await expect(page.locator('#storage-warning')).toBeHidden();
   await page.reload();
-  await expect(page.getByRole('combobox').locator('option:checked')).toHaveText('Сохранённый список');
+  await expect(activeListTitle(page)).toHaveText('Сохранённый список');
+  await expect(listButton(page, 'Сохранённый список')).toHaveAttribute('aria-pressed', 'true');
   expect(await page.evaluate(() => localStorage.getItem('digital-todo.tasks.v1'))).toBe(raw);
   await context.close();
 });
@@ -180,7 +197,8 @@ test('respects IME in create and rename dialogs and handles ordinary Escape afte
   await page.goto('/');
   const cdp = await context.newCDPSession(page);
   for (const action of ['Новый список', 'Переименовать']) {
-    await page.getByRole('button', { name: action, exact: true }).click();
+    if (action === 'Новый список') await openCreateList(page);
+    else await openListAction(page, 'Переименовать');
     const dialog = page.getByRole('dialog');
     await cdp.send('Input.imeSetComposition', { text: '仮', selectionStart: 1, selectionEnd: 1 });
     await page.keyboard.press('Enter');
@@ -191,10 +209,114 @@ test('respects IME in create and rename dialogs and handles ordinary Escape afte
     await page.keyboard.press('Enter');
     await expect(dialog).toHaveCount(0);
   }
-  await expect(page.getByRole('combobox').locator('option:checked')).toHaveText('名前');
-  await page.getByRole('button', { name: 'Переименовать', exact: true }).click();
+  await expect(activeListTitle(page)).toHaveText('名前');
+  await expect(listButton(page, '名前')).toHaveAttribute('aria-pressed', 'true');
+  await openListAction(page, 'Переименовать');
   await page.getByRole('dialog').getByRole('textbox').fill('Не сохранять');
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(page.getByRole('combobox').locator('option:checked')).toHaveText('名前');
+  await expect(activeListTitle(page)).toHaveText('名前');
+  await expect(listButton(page, '名前')).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('retains keyboard focus when switching lists and closing list actions', async ({ page }) => {
+  await page.goto('/');
+  await createList(page, 'Работа');
+  const menu = listMenuTrigger(page);
+  await expect(menu).toBeFocused();
+  const inbox = listButton(page, 'Мои задачи');
+  await inbox.focus();
+  await page.keyboard.press('Enter');
+  await expect(inbox).toBeFocused();
+  await expect(inbox).toHaveAttribute('aria-pressed', 'true');
+  await expect(listButton(page, 'Работа')).toHaveAttribute('aria-pressed', 'false');
+  await expect(activeListTitle(page)).toHaveText('Мои задачи');
+
+  await menu.focus();
+  await page.keyboard.press('Enter');
+  const rename = listMenu(page).getByRole('button', { name: 'Переименовать', exact: true });
+  await page.keyboard.press('Tab');
+  await expect(rename).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(rename).toBeHidden();
+  await expect(menu).toBeFocused();
+
+  await openListAction(page, 'Переименовать');
+  const dialog = page.getByRole('dialog', { name: 'Переименовать список' });
+  await dialog.getByRole('textbox', { name: 'Название списка' }).fill('Личное');
+  await dialog.getByRole('button', { name: 'Сохранить', exact: true }).click();
+  await expect(menu).toBeFocused();
+  await expect(listButton(page, 'Личное')).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('uses a modal list picker on mobile and returns focus when it closes', async ({ page }) => {
+  await page.setViewportSize({ width: 700, height: 720 });
+  await page.goto('/');
+  const trigger = listPickerButton(page);
+  const picker = listPicker(page);
+  await expect(listNav(page)).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Новый список', exact: true })).toBeHidden();
+
+  await trigger.click();
+  await expect(picker).toBeVisible();
+  await expect(listButton(picker, 'Мои задачи')).toHaveAttribute('aria-pressed', 'true');
+  await picker.getByRole('button', { name: 'Закрыть списки', exact: true }).click();
+  await expect(picker).toBeHidden();
+  await expect(trigger).toBeFocused();
+
+  await createList(page, 'Работа');
+  await expect(picker).toBeHidden();
+  await expect(listMenuTrigger(page)).toBeFocused();
+  await expect(activeListTitle(page)).toHaveText('Работа');
+  await addTask(page, 'Рабочая задача');
+
+  await trigger.click();
+  await expect(listButton(picker, 'Работа')).toHaveAttribute('aria-pressed', 'true');
+  await listButton(picker, 'Мои задачи').click();
+  await expect(picker).toBeHidden();
+  await expect(trigger).toBeFocused();
+  await expect(activeListTitle(page)).toHaveText('Мои задачи');
+  await expect(page.getByRole('checkbox')).toHaveCount(0);
+
+  await trigger.click();
+  await page.keyboard.press('Escape');
+  await expect(picker).toBeHidden();
+  await expect(trigger).toBeFocused();
+
+  await page.setViewportSize({ width: 701, height: 720 });
+  await expect(trigger).toBeHidden();
+  await expect(listButton(page, 'Мои задачи')).toHaveAttribute('aria-pressed', 'true');
+  await listButton(page, 'Работа').click();
+  await expect(page.getByRole('checkbox', { name: 'Рабочая задача' })).toBeVisible();
+});
+
+test('restores the add form and its draft per list until reload', async ({ page }) => {
+  await page.goto('/');
+  const form = page.locator('#task-form');
+  const input = await openTaskForm(page);
+  await input.fill('Черновик добавления A');
+  await createList(page, 'B');
+  await expect(form).toBeHidden();
+  await expect(addTaskButton(page)).toBeVisible();
+  await expect(await openTaskForm(page)).toBeEmpty();
+  await input.fill('Черновик добавления B');
+
+  await listButton(page, 'Мои задачи').click();
+  await expect(form).toBeVisible();
+  await expect(taskInput(page)).toHaveValue('Черновик добавления A');
+  await listButton(page, 'B').click();
+  await expect(form).toBeVisible();
+  await expect(taskInput(page)).toHaveValue('Черновик добавления B');
+  await expect(page.getByRole('checkbox')).toHaveCount(0);
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('digital-todo.state.v2')!));
+  expect(saved.lists.map((list: { tasks: unknown[] }) => list.tasks)).toEqual([[], []]);
+  expect(JSON.stringify(saved)).not.toContain('Черновик добавления');
+
+  await page.reload();
+  await expect(activeListTitle(page)).toHaveText('B');
+  await expect(form).toBeHidden();
+  await expect(await openTaskForm(page)).toBeEmpty();
+  await listButton(page, 'Мои задачи').click();
+  await expect(form).toBeHidden();
+  await expect(await openTaskForm(page)).toBeEmpty();
 });

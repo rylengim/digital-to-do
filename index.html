@@ -3,71 +3,68 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f5f3ed" />
+    <meta name="theme-color" content="#f6f4ee" />
     <meta name="description" content="Простой список задач. Добавляйте, отмечайте сделанное и двигайтесь по порядку." />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>По порядку — список задач</title>
   </head>
   <body>
-    <div class="page">
-      <header class="topbar">
-        <div class="brand"><span class="brand-mark" aria-hidden="true">✓</span> по порядку</div>
-        <span class="topbar-note">Меньше шума. Больше дела.</span>
-      </header>
-
-      <main>
-        <div class="intro">
-          <p class="eyebrow">МЕСТО ДЛЯ ВАШИХ ПЛАНОВ</p>
-          <h1>Мои задачи<span aria-hidden="true">.</span></h1>
-          <p class="intro-description">Освободите голову — запишите всё здесь.</p>
+    <div class="app">
+      <aside class="sidebar" aria-label="Управление списками">
+        <div class="brand"><span class="brand-mark" aria-hidden="true">✓</span>по порядку</div>
+        <div class="sidebar-heading">
+          <h2>Мои списки</h2>
+          <button id="create-list" class="icon-button" type="button" aria-label="Новый список" title="Новый список" data-create-list>+</button>
         </div>
-
-        <section class="workspace" aria-label="Управление задачами">
-          <div class="list-controls">
-            <label for="list-picker">Текущий список</label>
-            <select id="list-picker"></select>
-            <div class="list-actions">
-              <button id="create-list" class="edit-cancel" type="button">Новый список</button>
-              <button id="rename-list" class="edit-cancel" type="button">Переименовать</button>
-              <button id="delete-list" class="edit-cancel" type="button">Удалить список</button>
-            </div>
-            <p id="last-list-hint">Последний список удалить нельзя.</p>
-          </div>
-          <form id="task-form" novalidate>
-            <label for="task-title">Что нужно сделать?</label>
-            <div class="input-row">
-              <input id="task-title" name="title" type="text" placeholder="Например, прочитать главу книги" autocomplete="off" aria-describedby="input-error" />
-              <button class="add-button" type="submit"><span aria-hidden="true">+</span> Добавить</button>
-            </div>
-            <p id="input-error" class="input-error" aria-live="polite"></p>
-          </form>
-
-          <p id="storage-warning" class="storage-warning" role="status" hidden></p>
-
-          <div class="list-heading">
-            <h2>Список дел</h2>
+        <nav class="list-nav" aria-label="Списки задач"></nav>
+      </aside>
+      <header class="mobile-header">
+        <div class="brand"><span class="brand-mark" aria-hidden="true">✓</span>по порядку</div>
+        <button id="open-lists" class="text-button" type="button" aria-haspopup="dialog">Списки</button>
+      </header>
+      <main class="workspace" aria-label="Управление задачами">
+        <div class="workspace-heading">
+          <div class="heading-text">
+            <h1 id="active-list-title">Мои задачи</h1>
             <p id="task-count">Пока пусто</p>
           </div>
-          <ul id="task-list" aria-label="Задачи"></ul>
-          <div id="empty-state" class="empty-state">
-            <svg class="empty-icon" viewBox="0 0 80 80" fill="none" aria-hidden="true">
-              <rect x="17" y="10" width="46" height="60" rx="5" />
-              <path d="M29 27h23M29 39h23M29 51h13" />
-              <circle cx="59" cy="59" r="13" />
-              <path d="m53 59 4 4 8-9" />
-            </svg>
-            <h3>Начните с одного дела</h3>
-            <p>Добавьте первую задачу в поле выше.<br />Большие планы начинаются с маленьких шагов.</p>
+          <details id="list-menu" class="action-menu">
+            <summary class="icon-button" aria-label="Действия со списком" title="Действия со списком">⋯</summary>
+            <div class="menu-actions">
+              <button id="rename-list" type="button">Переименовать</button>
+              <button id="delete-list" class="danger-text" type="button">Удалить список</button>
+              <p id="last-list-hint">Последний список удалить нельзя.</p>
+            </div>
+          </details>
+        </div>
+        <p id="storage-warning" class="storage-warning" role="status" hidden></p>
+        <button id="add-task" class="add-trigger" type="button" aria-expanded="false" aria-controls="task-form"><span aria-hidden="true">+</span> Добавить задачу</button>
+        <form id="task-form" class="task-editor add-editor" novalidate hidden>
+          <label for="task-title">Что нужно сделать?</label>
+          <input id="task-title" name="title" class="edit-input" type="text" placeholder="Например, прочитать главу книги" autocomplete="off" aria-describedby="input-error" />
+          <p id="input-error" class="edit-error" aria-live="polite"></p>
+          <div class="edit-controls">
+            <button id="cancel-add-task" class="edit-cancel" type="button">Отмена</button>
+            <button class="edit-save" type="submit">Добавить</button>
           </div>
-          <p id="announcement" class="sr-only" role="status" aria-live="polite"></p>
-        </section>
-
-        <footer class="footer">
-          <span id="storage-status">Задачи хранятся в этом браузере</span>
-          <span class="footer-note">В своём темпе.</span>
-        </footer>
+        </form>
+        <ul id="task-list" aria-label="Задачи"></ul>
+        <div id="empty-state" class="empty-state">
+          <h2>Начните с одного дела</h2>
+          <p>Добавьте первую задачу.<br />Большие планы начинаются с маленьких шагов.</p>
+        </div>
+        <footer class="footer"><span id="storage-status">Задачи хранятся в этом браузере</span></footer>
+        <p id="announcement" class="sr-only" role="status" aria-live="polite"></p>
       </main>
     </div>
+    <dialog id="list-picker-dialog" aria-labelledby="list-picker-heading">
+      <div class="dialog-heading">
+        <h2 id="list-picker-heading">Мои списки</h2>
+        <button id="close-list-picker" class="icon-button" type="button" aria-label="Закрыть списки">×</button>
+      </div>
+      <nav class="list-nav dialog-scroll" aria-label="Списки задач"></nav>
+      <button class="edit-save" type="button" data-create-list>Новый список</button>
+    </dialog>
     <dialog id="list-name-dialog" aria-labelledby="list-name-heading">
       <form id="list-name-form" novalidate>
         <h2 id="list-name-heading">Новый список</h2>
@@ -75,15 +72,16 @@
         <input id="list-name" class="edit-input" type="text" autocomplete="off" aria-describedby="list-name-error" />
         <p id="list-name-error" class="edit-error" aria-live="polite"></p>
         <div class="edit-controls">
-          <button id="list-name-save" class="edit-save" type="submit">Создать</button>
           <button id="list-name-cancel" class="edit-cancel" type="button">Отмена</button>
+          <button id="list-name-save" class="edit-save" type="submit">Создать</button>
         </div>
       </form>
     </dialog>
-    <dialog id="delete-list-dialog" aria-labelledby="delete-list-heading" aria-describedby="delete-list-description">
+    <dialog id="delete-list-dialog" aria-labelledby="delete-list-heading" aria-describedby="delete-list-description delete-list-name">
       <form id="delete-list-form">
         <h2 id="delete-list-heading">Удалить список?</h2>
         <p id="delete-list-description"></p>
+        <p id="delete-list-name" class="dialog-scroll" tabindex="0" aria-label="Название удаляемого списка"></p>
         <div class="edit-controls">
           <button id="delete-list-cancel" class="edit-cancel" type="button">Отмена</button>
           <button class="edit-save" type="submit">Удалить</button>
