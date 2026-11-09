@@ -35,8 +35,8 @@ function updateSummary(): void {
 function persist(message: string): void {
   const saved = saveTasks(tasks);
   showStorageWarning(saved ? '' : 'Не удалось сохранить изменения. Сейчас они доступны только в этой вкладке и могут исчезнуть после обновления страницы.');
-  announcement.textContent = message;
   updateSummary();
+  announcement.textContent = `${message} ${count.textContent}.`;
 }
 
 function createTaskRow(task: Task): HTMLLIElement {

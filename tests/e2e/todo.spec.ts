@@ -8,8 +8,10 @@ test('adds by button and Enter, completes, deletes and restores independent task
   const input = page.getByRole('textbox', { name: 'Что нужно сделать?' });
   await input.fill('  Проверить прототип  ');
   await page.getByRole('button', { name: 'Добавить', exact: true }).click();
+  const firstAnnouncement = await page.locator('#announcement').textContent();
   await input.fill('Проверить прототип');
   await input.press('Enter');
+  await expect(page.locator('#announcement')).not.toHaveText(firstAnnouncement ?? '');
   const rows = page.getByRole('list', { name: 'Задачи', exact: true }).getByRole('listitem');
   await expect(rows).toHaveCount(2);
   await rows.nth(1).getByRole('checkbox').check();
