@@ -7,7 +7,7 @@ test('IME Enter and Escape keep an edit draft open until composition is committe
   await addInput.fill('Исходное');
   await addInput.press('Enter');
   await page.getByRole('checkbox').check();
-  const original = await page.evaluate(() => localStorage.getItem('digital-todo.tasks.v1'));
+  const original = await page.evaluate(() => localStorage.getItem('digital-todo.state.v2'));
   await page.getByRole('button', { name: 'Изменить задачу: Исходное' }).click();
   const editor = page.getByRole('textbox', { name: 'Название задачи' });
   const cdp = await context.newCDPSession(page);
@@ -16,10 +16,10 @@ test('IME Enter and Escape keep an edit draft open until composition is committe
   await expect(editor).toBeVisible();
   await expect(editor).toBeFocused();
   await expect(editor).toHaveValue('仮');
-  expect(await page.evaluate(() => localStorage.getItem('digital-todo.tasks.v1'))).toBe(original);
+  expect(await page.evaluate(() => localStorage.getItem('digital-todo.state.v2'))).toBe(original);
   await page.keyboard.press('Escape');
   await expect(editor).toBeVisible();
-  expect(await page.evaluate(() => localStorage.getItem('digital-todo.tasks.v1'))).toBe(original);
+  expect(await page.evaluate(() => localStorage.getItem('digital-todo.state.v2'))).toBe(original);
 
   await cdp.send('Input.insertText', { text: '仮名' });
   await page.keyboard.press('Enter');
@@ -38,7 +38,7 @@ test('IME confirmation does not add a partial task', async ({ page, context }) =
   await page.keyboard.press('Enter');
   await expect(page.getByRole('listitem')).toHaveCount(0);
   await expect(input).toHaveValue('仮');
-  expect(await page.evaluate(() => localStorage.getItem('digital-todo.tasks.v1'))).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem('digital-todo.state.v2'))).toBeNull();
   await cdp.send('Input.insertText', { text: '仮名' });
   await page.keyboard.press('Enter');
   await expect(page.getByRole('listitem')).toHaveCount(1);

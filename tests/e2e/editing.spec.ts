@@ -9,7 +9,7 @@ test('saves a renamed completed task without changing its id or its duplicate', 
   }
   const rows = page.getByRole('listitem');
   await rows.nth(1).getByRole('checkbox').check();
-  const original = await page.evaluate(() => JSON.parse(localStorage.getItem('digital-todo.tasks.v1')!));
+  const original = await page.evaluate(() => JSON.parse(localStorage.getItem('digital-todo.state.v2')!).lists[0].tasks);
   await rows.nth(1).getByRole('button', { name: /^Изменить задачу:/ }).click();
   const editor = rows.nth(1).getByRole('textbox', { name: 'Название задачи' });
   await expect(editor).toBeFocused();
@@ -22,7 +22,7 @@ test('saves a renamed completed task without changing its id or its duplicate', 
   await expect(rows).toHaveCount(2);
   await expect(rows.nth(0).getByRole('checkbox', { name: 'Одинаковые задачи' })).not.toBeChecked();
   await expect(rows.nth(1).getByRole('checkbox', { name: 'Уточнённая задача' })).toBeChecked();
-  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('digital-todo.tasks.v1')!));
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('digital-todo.state.v2')!).lists[0].tasks);
   expect(saved).toEqual([original[0], { ...original[1], title: 'Уточнённая задача' }]);
 });
 
@@ -69,7 +69,7 @@ test('rejects empty edits, saves with Enter and safely displays HTML as text', a
     await expect(editor).toBeFocused();
     await expect(editor).toHaveAttribute('aria-invalid', 'true');
     await expect(page.getByRole('listitem').getByText('Введите название задачи.', { exact: true })).toBeVisible();
-    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('digital-todo.tasks.v1')!));
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('digital-todo.state.v2')!).lists[0].tasks);
     expect(saved[0].title).toBe('Старая задача');
   }
   const title = '<img src=x onerror="alert(1)">';

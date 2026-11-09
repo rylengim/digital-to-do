@@ -1,5 +1,5 @@
 import './style.css';
-import { loadTasks, saveTasks, type Task } from './storage';
+import { loadState, saveState, type Task } from './storage';
 
 function element<T extends HTMLElement>(selector: string): T {
   const result = document.querySelector<T>(selector);
@@ -22,8 +22,10 @@ const count = element('#task-count');
 const warning = element('#storage-warning');
 const storageStatus = element('#storage-status');
 const announcement = element('#announcement');
-const loaded = loadTasks();
-let tasks = loaded.tasks;
+const loaded = loadState();
+const state = loaded.state;
+const activeList = state.lists.find(item => item.id === state.activeListId)!;
+let tasks = activeList.tasks;
 
 function showStorageWarning(message: string): void {
   warning.textContent = message;
@@ -39,7 +41,8 @@ function updateSummary(): void {
 }
 
 function persist(message: string): void {
-  const saved = saveTasks(tasks);
+  activeList.tasks = tasks;
+  const saved = saveState(state);
   showStorageWarning(saved ? '' : 'Не удалось сохранить изменения. Сейчас они доступны только в этой вкладке и могут исчезнуть после обновления страницы.');
   updateSummary();
   announcement.textContent = `${message} ${count.textContent}.`;
