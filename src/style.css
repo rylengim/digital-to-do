@@ -12,7 +12,7 @@
 
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 280px; }
-button, input { font: inherit; }
+button, input, select { font: inherit; }
 button { cursor: pointer; }
 button, input { -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
@@ -29,6 +29,17 @@ h1 { font-size: clamp(36px, 5vw, 48px); line-height: 1.12; letter-spacing: -2px;
 h1 span { color: var(--accent); }
 .intro-description { color: var(--muted); font-size: 14px; line-height: 1.7; margin: 0; }
 .workspace { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 28px 28px 0; box-shadow: 0 5px 20px #292c2704; }
+.list-controls { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.list-controls label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+#list-picker { display: block; width: 100%; min-width: 0; padding: 12px; border: 1px solid #a3a69a; border-radius: 6px; color: var(--ink); background: var(--surface); font-size: 16px; text-overflow: ellipsis; }
+.list-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.list-actions button { font-size: 12px; }
+button:disabled { cursor: not-allowed; opacity: .55; }
+#last-list-hint { margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+dialog { width: min(440px, calc(100% - 32px)); max-height: calc(100% - 32px); padding: 24px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); background: var(--surface); }
+dialog::backdrop { background: #292c2766; }
+dialog h2 { margin: 0 0 24px; font-size: 20px; }
+dialog p { line-height: 1.6; overflow-wrap: anywhere; }
 form label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 10px; }
 .input-row { display: flex; gap: 10px; }
 #task-title { width: 100%; min-width: 0; border: 1px solid #a3a69a; background: var(--surface); color: var(--ink); border-radius: 6px; padding: 14px; font-size: 14px; }

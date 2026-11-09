@@ -50,6 +50,12 @@ test('rejects blank input and renders HTML literally', async ({ page }) => {
 test('supports keyboard actions and keeps focus after deleting', async ({ page }) => {
   await page.goto('/');
   await page.keyboard.press('Tab');
+  await expect(page.getByRole('combobox', { name: 'Текущий список' })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: 'Новый список', exact: true })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: 'Переименовать', exact: true })).toBeFocused();
+  await page.keyboard.press('Tab');
   await expect(page.getByRole('textbox')).toBeFocused();
   await page.keyboard.type('Keyboard task');
   await page.keyboard.press('Enter');
@@ -78,6 +84,7 @@ test('fits a narrow screen with a long unbroken task title', async ({ page }) =>
   expect(contentWidth).toBeLessThanOrEqual(viewportWidth);
   await expect(page.getByRole('checkbox')).toBeVisible();
   const button = page.getByRole('button', { name: /^Удалить задачу:/ });
+  await button.scrollIntoViewIfNeeded();
   await expect(button).toBeInViewport();
   await button.click();
   await expect(page.getByText('Начните с одного дела')).toBeVisible();

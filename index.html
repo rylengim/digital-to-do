@@ -23,6 +23,16 @@
         </div>
 
         <section class="workspace" aria-label="Управление задачами">
+          <div class="list-controls">
+            <label for="list-picker">Текущий список</label>
+            <select id="list-picker"></select>
+            <div class="list-actions">
+              <button id="create-list" class="edit-cancel" type="button">Новый список</button>
+              <button id="rename-list" class="edit-cancel" type="button">Переименовать</button>
+              <button id="delete-list" class="edit-cancel" type="button">Удалить список</button>
+            </div>
+            <p id="last-list-hint">Последний список удалить нельзя.</p>
+          </div>
           <form id="task-form" novalidate>
             <label for="task-title">Что нужно сделать?</label>
             <div class="input-row">
@@ -58,6 +68,28 @@
         </footer>
       </main>
     </div>
+    <dialog id="list-name-dialog" aria-labelledby="list-name-heading">
+      <form id="list-name-form" novalidate>
+        <h2 id="list-name-heading">Новый список</h2>
+        <label for="list-name">Название списка</label>
+        <input id="list-name" class="edit-input" type="text" autocomplete="off" aria-describedby="list-name-error" />
+        <p id="list-name-error" class="edit-error" aria-live="polite"></p>
+        <div class="edit-controls">
+          <button id="list-name-save" class="edit-save" type="submit">Создать</button>
+          <button id="list-name-cancel" class="edit-cancel" type="button">Отмена</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="delete-list-dialog" aria-labelledby="delete-list-heading" aria-describedby="delete-list-description">
+      <form id="delete-list-form">
+        <h2 id="delete-list-heading">Удалить список?</h2>
+        <p id="delete-list-description"></p>
+        <div class="edit-controls">
+          <button id="delete-list-cancel" class="edit-cancel" type="button">Отмена</button>
+          <button class="edit-save" type="submit">Удалить</button>
+        </div>
+      </form>
+    </dialog>
     <noscript>Для работы списка задач включите JavaScript в браузере.</noscript>
     <script type="module" src="/src/main.ts"></script>
   </body>
