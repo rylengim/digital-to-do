@@ -1,12 +1,12 @@
 @font-face {
-  font-family: "Ubuntu Sans";
-  src: url('./assets/fonts/ubuntu-sans-web.woff2') format('woff2');
+  font-family: "Manrope";
+  src: url('./assets/fonts/manrope-variable.woff2') format('woff2');
   font-style: normal;
-  font-weight: 100 800;
+  font-weight: 200 800;
   font-display: swap;
 }
 :root {
-  font-family: "Ubuntu Sans", system-ui, sans-serif;
+  font-family: "Manrope", system-ui, sans-serif;
   font-synthesis: none;
   color-scheme: light;
   color: #302f2b;
