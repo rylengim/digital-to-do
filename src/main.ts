@@ -7,6 +7,12 @@ function element<T extends HTMLElement>(selector: string): T {
   return result;
 }
 
+function isImeKey(event: KeyboardEvent): boolean {
+  // Some IMEs end composition before the final keydown; 229 still identifies that key.
+  // https://developer.mozilla.org/en-US/docs/Web/API/Element/keydown_event#keydown_events_with_ime
+  return event.isComposing || event.keyCode === 229;
+}
+
 const form = element<HTMLFormElement>('#task-form');
 const input = element<HTMLInputElement>('#task-title');
 const inputError = element('#input-error');
@@ -147,7 +153,12 @@ function createTaskRow(task: Task): HTMLLIElement {
       editInput.removeAttribute('aria-invalid');
     });
     editor.addEventListener('keydown', event => {
-      if (event.key === 'Escape' && !event.isComposing) {
+      if (isImeKey(event)) {
+        // Cancel the implicit form submit, leaving Escape to the IME itself.
+        if (event.key === 'Enter') event.preventDefault();
+        return;
+      }
+      if (event.key === 'Escape') {
         event.preventDefault();
         cancelEdit();
       }
@@ -180,6 +191,10 @@ function createTaskRow(task: Task): HTMLLIElement {
   row.append(label, editButton, removeButton);
   return row;
 }
+
+form.addEventListener('keydown', event => {
+  if (event.key === 'Enter' && isImeKey(event)) event.preventDefault();
+});
 
 form.addEventListener('submit', event => {
   event.preventDefault();
