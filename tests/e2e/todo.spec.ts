@@ -18,14 +18,14 @@ test('adds by button and Enter, completes, deletes and restores independent task
   await page.reload();
   await expect(rows.nth(0).getByRole('checkbox')).not.toBeChecked();
   await expect(rows.nth(1).getByRole('checkbox')).toBeChecked();
-  await rows.nth(0).getByRole('button').click();
+  await rows.nth(0).getByRole('button', { name: /^Удалить задачу:/ }).click();
   await page.reload();
   await expect(rows).toHaveCount(1);
   await expect(rows.getByRole('checkbox')).toBeChecked();
   await rows.getByRole('checkbox').uncheck();
   await page.reload();
   await expect(rows.getByRole('checkbox')).not.toBeChecked();
-  await rows.getByRole('button').click();
+  await rows.getByRole('button', { name: /^Удалить задачу:/ }).click();
   await page.reload();
   await expect(rows).toHaveCount(0);
   await expect(page.getByText('Начните с одного дела')).toBeVisible();
@@ -60,6 +60,8 @@ test('supports keyboard actions and keeps focus after deleting', async ({ page }
   await page.keyboard.press('Space');
   await expect(page.getByRole('checkbox')).toBeChecked();
   await expect(page.getByRole('checkbox')).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: 'Изменить задачу: Keyboard task' })).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(page.getByRole('button', { name: 'Удалить задачу: Keyboard task' })).toBeFocused();
   await page.keyboard.press('Enter');

@@ -39,6 +39,26 @@ function persist(message: string): void {
   announcement.textContent = `${message} ${count.textContent}.`;
 }
 
+function createActionButton(action: string, pathData: string): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'task-action';
+  button.title = action;
+  const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  icon.setAttribute('viewBox', '0 0 24 24');
+  icon.setAttribute('fill', 'none');
+  icon.setAttribute('stroke', 'currentColor');
+  icon.setAttribute('stroke-width', '1.5');
+  icon.setAttribute('stroke-linecap', 'round');
+  icon.setAttribute('stroke-linejoin', 'round');
+  icon.setAttribute('aria-hidden', 'true');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', pathData);
+  icon.append(path);
+  button.append(icon);
+  return button;
+}
+
 function createTaskRow(task: Task): HTMLLIElement {
   const row = document.createElement('li');
   row.className = 'task';
@@ -52,26 +72,94 @@ function createTaskRow(task: Task): HTMLLIElement {
   checkbox.checked = task.completed;
   const title = document.createElement('span');
   title.className = 'task-title';
-  title.textContent = task.title;
   label.append(checkbox, title);
 
-  const removeButton = document.createElement('button');
-  removeButton.type = 'button';
-  removeButton.className = 'delete-button';
-  removeButton.setAttribute('aria-label', `Удалить задачу: ${task.title}`);
-  removeButton.title = 'Удалить задачу';
-  const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  icon.setAttribute('viewBox', '0 0 24 24');
-  icon.setAttribute('fill', 'none');
-  icon.setAttribute('stroke', 'currentColor');
-  icon.setAttribute('stroke-width', '1.5');
-  icon.setAttribute('stroke-linecap', 'round');
-  icon.setAttribute('stroke-linejoin', 'round');
-  icon.setAttribute('aria-hidden', 'true');
-  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  path.setAttribute('d', 'M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6');
-  icon.append(path);
-  removeButton.append(icon);
+  const editButton = createActionButton('Изменить задачу', 'm14 5 5 5M4 20l5-1L20 8a3.5 3.5 0 0 0-5-5L4 14z');
+  const removeButton = createActionButton('Удалить задачу', 'M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6');
+
+  function updateTitle(): void {
+    title.textContent = task.title;
+    editButton.setAttribute('aria-label', `Изменить задачу: ${task.title}`);
+    removeButton.setAttribute('aria-label', `Удалить задачу: ${task.title}`);
+  }
+  updateTitle();
+
+  editButton.addEventListener('click', () => {
+    const editor = document.createElement('form');
+    editor.className = 'task-editor';
+    editor.noValidate = true;
+    editor.setAttribute('aria-label', `Редактирование задачи: ${task.title}`);
+
+    const editLabel = document.createElement('label');
+    editLabel.textContent = 'Название задачи';
+    const editInput = document.createElement('input');
+    editInput.type = 'text';
+    editInput.className = 'edit-input';
+    editInput.value = task.title;
+    editInput.autocomplete = 'off';
+    editLabel.append(editInput);
+
+    const error = document.createElement('p');
+    error.className = 'edit-error';
+    error.id = `edit-error-${crypto.randomUUID()}`;
+    error.setAttribute('aria-live', 'polite');
+    editInput.setAttribute('aria-describedby', error.id);
+
+    const controls = document.createElement('div');
+    controls.className = 'edit-controls';
+    const saveButton = document.createElement('button');
+    saveButton.type = 'submit';
+    saveButton.className = 'edit-save';
+    saveButton.textContent = 'Сохранить';
+    const cancelButton = document.createElement('button');
+    cancelButton.type = 'button';
+    cancelButton.className = 'edit-cancel';
+    cancelButton.textContent = 'Отмена';
+    controls.append(saveButton, cancelButton);
+
+    function closeEditor(): void {
+      editor.remove();
+      label.hidden = editButton.hidden = removeButton.hidden = false;
+      editButton.focus();
+    }
+    function cancelEdit(): void {
+      closeEditor();
+      announcement.textContent = `Редактирование отменено: ${task.title}.`;
+    }
+
+    editor.addEventListener('submit', event => {
+      event.preventDefault();
+      const newTitle = editInput.value.trim();
+      if (!newTitle) {
+        error.textContent = 'Введите название задачи.';
+        editInput.setAttribute('aria-invalid', 'true');
+        editInput.focus();
+        return;
+      }
+      // The draft stays in the input until an explicit save.
+      task.title = newTitle;
+      updateTitle();
+      persist(`Задача изменена: ${task.title}.`);
+      closeEditor();
+    });
+    editInput.addEventListener('input', () => {
+      error.textContent = '';
+      editInput.removeAttribute('aria-invalid');
+    });
+    editor.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !event.isComposing) {
+        event.preventDefault();
+        cancelEdit();
+      }
+    });
+    cancelButton.addEventListener('click', cancelEdit);
+
+    editor.append(editLabel, error, controls);
+    label.hidden = editButton.hidden = removeButton.hidden = true;
+    row.append(editor);
+    editInput.focus();
+    editInput.select();
+  });
 
   checkbox.addEventListener('change', () => {
     task.completed = checkbox.checked;
@@ -85,10 +173,11 @@ function createTaskRow(task: Task): HTMLLIElement {
     tasks = tasks.filter(item => item.id !== task.id);
     row.remove();
     persist('Задача удалена.');
-    (neighbor?.querySelector<HTMLInputElement>('input') ?? input).focus();
+    (neighbor?.querySelector<HTMLInputElement>('.edit-input')
+      ?? neighbor?.querySelector<HTMLInputElement>('.task-checkbox') ?? input).focus();
   });
 
-  row.append(label, removeButton);
+  row.append(label, editButton, removeButton);
   return row;
 }
 

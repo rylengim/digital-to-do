@@ -50,9 +50,20 @@ h2 { margin: 0; font-size: 14px; font-weight: 600; }
 .task-checkbox:checked::after { content: ""; width: 10px; height: 6px; border: solid white; border-width: 0 0 2px 2px; transform: translateY(-1px) rotate(-45deg); }
 .task-title { font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; min-width: 0; }
 .task.is-completed .task-title { text-decoration: line-through; color: var(--muted); }
-.delete-button { display: grid; place-items: center; flex: 0 0 44px; height: 44px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); }
-.delete-button:hover { color: var(--accent); background: #f8eee7; }
-.delete-button svg { width: 18px; height: 18px; }
+.task-action { display: grid; place-items: center; flex: 0 0 44px; height: 44px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); }
+.task-action:hover { color: var(--accent); background: #f8eee7; }
+.task-action svg { width: 18px; height: 18px; }
+.task-editor { flex: 1; min-width: 0; padding: 8px 0; }
+.task-editor label { margin: 0; }
+.edit-input { display: block; width: 100%; min-width: 0; margin-top: 8px; padding: 12px; border: 1px solid #a3a69a; border-radius: 6px; font-size: 16px; font-weight: 400; background: var(--surface); color: var(--ink); }
+.edit-input[aria-invalid="true"] { border-color: var(--accent); }
+.edit-error { min-height: 18px; margin: 6px 0 8px; color: #a0321b; font-size: 12px; line-height: 1.5; }
+.edit-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.edit-save, .edit-cancel { min-height: 44px; border: 1px solid var(--accent); border-radius: 6px; padding: 10px 14px; font-size: 13px; font-weight: 600; }
+.edit-save { background: var(--accent); color: white; }
+.edit-save:hover { background: #97351d; }
+.edit-cancel { background: var(--surface); color: var(--ink); border-color: #a3a69a; }
+.edit-cancel:hover { background: #f5f3ed; }
 .empty-state { text-align: center; padding: 30px 0 46px; }
 .empty-icon { width: 76px; height: 76px; stroke: #7f8973; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .empty-icon circle { fill: var(--surface); stroke: var(--accent); }
